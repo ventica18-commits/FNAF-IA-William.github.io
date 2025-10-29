@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>IA de FNAF - William</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+            background: radial-gradient(circle at center, #000010 0%, #000000 100%);
+            overflow: hidden;
+            cursor: pointer; /* indica que hay que hacer click para activar la música */
+        }
+
+        .lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255,0,0,0.05) 0px,
+                rgba(255,0,0,0.05) 2px,
+                rgba(0,255,255,0.05) 2px,
+                rgba(0,255,255,0.05) 4px
+            );
+            animation: moveLines 6s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes moveLines {
+            from { transform: translateY(0); }
+            to { transform: translateY(10px); }
+        }
+
+        h1 {
+            color: #ff3333;
+            text-align: center;
+            margin-top: 40px;
+            font-size: 28px;
+            text-shadow: 0 0 15px #ff0000, 0 0 30px #ff3333;
+            animation: flicker 2s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                opacity: 1;
+            }
+            20%, 24%, 55% {
+                opacity: 0.4;
+            }
+        }
+
+        p {
+            text-align: center;
+            color: #00ffff;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        form {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 50%;
+            background: rgba(10,10,10,0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            color: #00ffff;
+            outline: none;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 15px #00ffff;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            background-color: #ff3333;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff0000;
+            box-shadow: 0 0 20px #ff0000;
+        }
+
+        .confirmacion {
+            text-align: center;
+            color: #ff3333;
+            font-size: 16px;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .confirmacion.visible {
+            opacity: 1;
+        }
+
+        .dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: blink 2s infinite alternate;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0.1; }
+            100% { opacity: 0.9; }
+        }
+
+        #toggleMusic {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,0,0,0.2);
+            border: 1px solid #ff3333;
+            color: #ff3333;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.3s;
+        }
+
+        #toggleMusic:hover {
+            background: rgba(255,0,0,0.5);
+            box-shadow: 0 0 10px #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="lines"></div>
+
+    <button id="toggleMusic">🔊 Música: OFF</button>
+
+    <h1>Bienvenido, fan de FNAF...</h1>
+    <p>Escribe lo que quieras de FNAF para entrenar a la IA William.</p>
+
+    <audio id="bip" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+    <!-- Música ambiental local -->
+    <audio id="bgMusic" loop>
+        <source src="sonidos/bg-music.mp3" type="audio/mp3">
+    </audio>
+
+    <form id="formulario" action="/enviar" method="POST">
+        <input type="text" name="mensaje" placeholder="Escribí tu mensaje..." required>
+        <button type="submit">Enviar</button>
+    </form>
+
+    <div id="confirmacion" class="confirmacion">Mensaje recibido por William.</div>
+
+    <script>
+        const form = document.getElementById("formulario");
+        const bip = document.getElementById("bip");
+        const confirmacion = document.getElementById("confirmacion");
+        const bgMusic = document.getElementById("bgMusic");
+        const toggleMusic = document.getElementById("toggleMusic");
+
+        let musicOn = false;
+        let musicStarted = false;
+
+        // Iniciar música al primer clic en cualquier lugar de la página
+        document.body.addEventListener("click", () => {
+            if(!musicStarted) {
+                bgMusic.play();
+                toggleMusic.textContent = "🔊 Música: ON";
+                musicOn = true;
+                musicStarted = true;
+            }
+        }, { once: true }); // solo la primera vez
+
+        // Evitar que la página se recargue y reproducir bip al enviar
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            bip.play();
+            confirmacion.classList.add("visible");
+            setTimeout(() => confirmacion.classList.remove("visible"), 2000);
+            form.mensaje.value = "";
+        });
+
+        // Control de música con botón
+        toggleMusic.addEventListener("click", () => {
+            if (!musicOn) {
+                bgMusic.play();
+                toggleMusic.textContent = "🔊 Música: ON";
+            } else {
+                bgMusic.pause();
+                toggleMusic.textContent = "🔇 Música: OFF";
+            }
+            musicOn = !musicOn;
+        });
+
+        // Efecto de puntos brillantes
+        for(let i=0; i<20; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('dot');
+            dot.style.top = Math.random() * window.innerHeight + 'px';
+            dot.style.left = Math.random() * window.innerWidth + 'px';
+            dot.style.backgroundColor = Math.random() > 0.5 ? '#ff3333' : '#00ffff';
+            dot.style.animationDuration = (1 + Math.random()*2) + 's';
+            document.body.appendChild(dot);
+        }
+    </script>
+</body>
+</html>
